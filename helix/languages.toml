@@ -1,0 +1,171 @@
+# ---------------------------
+# C / C++
+# ---------------------------
+[[language]]
+name = "cpp"
+file-types = ["cpp", "hpp", "cc", "cxx", "hxx"]
+auto-format = true
+language-servers = ["clangd"]
+
+[language-server.clangd]
+command = "clangd"
+args = ["--background-index", "--clang-tidy", "--header-insertion=iwyu"]
+
+
+# ---------------------------
+# Java
+# ---------------------------
+[[language]]
+name = "java"
+file-types = ["java"]
+language-servers = ["jdtls"]
+
+[language-server.jdtls]
+command = "jdtls"
+
+
+# ---------------------------
+# JavaScript / TypeScript
+# ---------------------------
+[[language]]
+name = "typescript"
+file-types = ["ts", "tsx"]
+language-servers = ["tsserver"]
+
+[[language]]
+name = "javascript"
+file-types = ["js", "jsx"]
+language-servers = ["tsserver"]
+
+[language-server.tsserver]
+command = "typescript-language-server"
+args = ["--stdio"]
+
+
+# ---------------------------
+# HTML
+# ---------------------------
+[[language]]
+name = "html"
+file-types = ["html", "htm"]
+language-servers = ["vscode-html"]
+
+[language-server.vscode-html]
+command = "vscode-html-language-server"
+args = ["--stdio"]
+
+
+# ---------------------------
+# CSS
+# ---------------------------
+[[language]]
+name = "css"
+file-types = ["css", "scss"]
+language-servers = ["vscode-css"]
+
+[language-server.vscode-css]
+command = "vscode-css-language-server"
+args = ["--stdio"]
+
+
+# ---------------------------
+# JSON
+# ---------------------------
+[[language]]
+name = "json"
+file-types = ["json"]
+language-servers = ["vscode-json"]
+
+[language-server.vscode-json]
+command = "vscode-json-language-server"
+args = ["--stdio"]
+
+
+# ---------------------------
+# Python
+# ---------------------------
+[[language]]
+name = "python"
+file-types = ["py"]
+language-servers = ["pylsp"]
+
+[language-server.pylsp]
+command = "pylsp"
+
+
+# ---------------------------
+# Nix
+# ---------------------------
+[[language]]
+name = "nix"
+file-types = ["nix"]
+language-servers = ["nil"]
+
+[language-server.nil]
+command = "nil"
+
+
+# ---------------------------
+# Bash
+# ---------------------------
+[[language]]
+name = "bash"
+file-types = ["sh", "bash"]
+language-servers = ["bashls"]
+
+[language-server.bashls]
+command = "bash-language-server"
+args = ["start"]
+
+
+# ---------------------------
+# GLSL / shaders
+# ---------------------------
+[[language]]
+name = "glsl"
+file-types = ["glsl", "vert", "frag", "geom", "comp"]
+language-servers = ["glsl_analyzer"]
+
+[language-server.glsl_analyzer]
+command = "glsl_analyzer"
+
+
+# ---------------------------
+# Markdown
+# ---------------------------
+[[language]]
+name = "markdown"
+file-types = ["md"]
+
+
+# ---------------------------
+# TOML
+# ---------------------------
+[[language]]
+name = "toml"
+file-types = ["toml"]
+
+
+# ---------------------------
+# YAML
+# ---------------------------
+[[language]]
+name = "yaml"
+file-types = ["yaml", "yml"]
+language-servers = ["yamlls"]
+
+[language-server.yamlls]
+command = "yaml-language-server"
+args = ["--stdio"]
+
+
+# ---------------------------
+# Rust
+# ---------------------------
+[[language]]
+name = "rust"
+file-types = ["rs"]
+language-servers = ["rust-analyzer"]
+
+[language-server."rust-analyzer"]
+command = "rust-analyzer"

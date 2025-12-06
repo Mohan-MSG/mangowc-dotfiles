@@ -1,0 +1,227 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "builtin",
+    "padding": {
+      "top": 1,
+      "left": 2,
+      "right": 3
+    }
+  },
+  "display": {
+    "separator": " ",
+    "color": {
+      "keys": "blue",
+      "title": "light_magenta"
+    },
+    "brightColor": true,
+    "key": {
+      "width": 18
+    },
+    "bar": {
+      "width": 14,
+      "char": {
+        "elapsed": "█",
+        "total": "░"
+      }
+    },
+    "percent": {
+      "type": 3
+    }
+  },
+  "modules": [
+    // --- HEADER ---
+    {
+      "type": "custom",
+      "format": "╭─────────────╮",
+      "outputColor": "blue"
+    },
+    {
+      "type": "title",
+      "key": "│ 󰟷 User      │",
+      "keyColor": "blue",
+      "format": "{user-name} @ {host-name}"
+    },
+    {
+      "type": "title",
+      "key": "│ 󰌢 Host      │",
+      "keyColor": "blue",
+      "format": "{host-name}"
+    },
+
+    // --- SOFTWARE ---
+    {
+      "type": "custom",
+      "format": "├─────────────┤",
+      "outputColor": "blue"
+    },
+    {
+      "type": "os",
+      "key": "│ 󰏤 OS        │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "kernel",
+      "key": "│ 󰌽 Kernel    │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "uptime",
+      "key": "│ 󰥔 Uptime    │",
+      "keyColor": "blue",
+      "format": "{days}d {hours}h {minutes}m"
+    },
+    {
+      "type": "packages",
+      "key": "│ 󰏖 Packages  │",
+      "keyColor": "blue",
+      "format": "{all} (pacman: {pacman}, flatpak: {flatpak-all})"
+    },
+    {
+      "type": "command",
+      "key": "│ 󰏖 AUR       │",
+      "keyColor": "blue",
+      "text": "pacman -Qm | wc -l"
+    },
+    {
+      "type": "shell",
+      "key": "│ 󰟤 Shell     │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "de",
+      "key": "│ 󰍹 Desktop   │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "wm",
+      "key": "│ 󰖩 WM        │",
+      "keyColor": "blue"  
+    },
+    {
+      "type": "terminal",
+      "key": "│  Terminal  │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "terminalfont",
+      "key": "│ 󰛖 Font      │",
+      "keyColor": "blue"
+    },
+
+    // --- HARDWARE ---
+    {
+      "type": "custom",
+      "format": "├─────────────┤",
+      "outputColor": "blue"
+    },
+    {
+      "type": "cpu",
+      "key": "│ 󰻠 CPU       │",
+      "keyColor": "blue",
+      "format": "{name} ({cores-physical}C/{cores-logical}T) @ {freq-max}"
+    },
+    // GPU BYPASS (Nvidia)
+    {
+      "type": "command",
+      "key": "│ 󰢮 GPU       │",
+      "keyColor": "blue",
+      "text": "nvidia-smi --query-gpu=name,memory.total,clocks.max.graphics --format=csv,noheader | awk -F', ' '{print $1 \" [\" $2 \"] @ \" $3}'"
+    },
+    {
+      "type": "memory",
+      "key": "│ 󰍛 RAM       │",
+      "keyColor": "blue",
+      "format": "{used} / {total} ({percentage})"
+    },
+    {
+      "type": "swap",
+      "key": "│ 󰓡 Swap      │",
+      "keyColor": "blue",
+      "format": "{used} / {total} ({percentage})"
+    },
+
+    // --- STORAGE ---
+    {
+      "type": "disk",
+      "key": "│ 󰋊 System    │",
+      "keyColor": "blue",
+      "folders": "/",
+      "format": "{size-used} / {size-total} ({size-percentage}%) [{filesystem}] {size-percentage-bar}"
+    },
+    {
+      "type": "disk",
+      "key": "│ 󰋊 Games     │",
+      "keyColor": "blue",
+      "folders": "/mnt/games",
+      "format": "{size-used} / {size-total} ({size-percentage}%) [{filesystem}] {size-percentage-bar}"
+    },
+    {
+      "type": "disk",
+      "key": "│ 󰋊 Backup    │",
+      "keyColor": "blue",
+      "folders": "/timeshift",
+      "format": "{size-used} / {size-total} ({size-percentage}%) [{filesystem}] {size-percentage-bar}"
+    },
+
+    // --- MISC ---
+    {
+      "type": "custom",
+      "format": "├─────────────┤",
+      "outputColor": "blue"
+    },
+    {
+      "type": "display",
+      "key": "│ 󰍹 Display   │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "theme",
+      "key": "│ 󰉼 Theme     │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "icons",
+      "key": "│ 󰀻 Icons     │",
+      "keyColor": "blue"
+    },
+    // Modulo Cursore Aggiunto
+    {
+      "type": "cursor",
+      "key": "│ 󰇀 Cursor    │",
+      "keyColor": "blue"
+    },
+    {
+      "type": "localip",
+      "key": "│ 󰩟 Local IP  │",
+      "keyColor": "blue",
+      "compact": true,
+      "showIpv4": true,
+      "showIpv6": false,
+      "defaultRouteOnly": true
+    },
+    {
+      "type": "battery",
+      "key": "│ 󰂄 Battery   │",
+      "keyColor": "blue"
+    },
+
+    // --- FOOTER ---
+    {
+      "type": "custom",
+      "format": "├─────────────┤",
+      "outputColor": "blue"
+    },
+    {
+      "type": "colors",
+      "key": "│ 󰸱 Palette   │",
+      "keyColor": "blue",
+      "symbol": "circle"
+    },
+    {
+      "type": "custom",
+      "format": "╰─────────────╯",
+      "outputColor": "blue"
+    }
+  ]
+}
