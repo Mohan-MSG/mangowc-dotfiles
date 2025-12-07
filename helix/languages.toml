@@ -1,3 +1,10 @@
+use-grammars = { only = [
+  "rust", "c", "cpp",
+  "toml", "json", "yaml",
+  "markdown", "html", "css",
+  "bash", "javascript","python"
+] }
+
 # ---------------------------
 # C / C++
 # ---------------------------
@@ -169,3 +176,17 @@ language-servers = ["rust-analyzer"]
 
 [language-server."rust-analyzer"]
 command = "rust-analyzer"
+
+
+# --------------------------
+# Quickshell
+# --------------------------
+[[language]]
+name = "quickshell"
+scope = "source.qml"
+file-types = ["qs", "qml.qs", "qss"]
+language-servers = ["qlls"]
+
+[language-server.qmlls]
+args = ["-E"]
+command = "qmlls"

@@ -26,9 +26,12 @@ if status is-interactive # Commands to run in interactive sessions can go here
     alias search "yay -Ss"
     alias install "yay -S --noconfirm"
     alias update "yay -Syu --noconfirm"
-    alias remove "yay -Rns --noconfirm"    
-    alias n "nvim"
-    alias cd "z"
-    alias z "zed"
+    alias remove "yay -Rns --noconfirm"
+    alias n nvim
+    alias cd z
+    alias z zed
+    alias h helix
+    alias qs quickshell
+
 end
 zoxide init fish | source
