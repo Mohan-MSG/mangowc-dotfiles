@@ -6,6 +6,12 @@ function fish_prompt -d "Write out the prompt"
         (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
 end
 
+if status is-interactive
+    if not set -q SSH_AUTH_SOCK
+        set -Ux SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket 2>/dev/null)
+    end
+end
+
 if status is-interactive # Commands to run in interactive sessions can go here
     fastfetch
 
