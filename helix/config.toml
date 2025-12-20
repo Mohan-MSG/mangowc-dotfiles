@@ -1,0 +1,116 @@
+theme = "catppuccin_mocha"
+
+[editor]
+auto-save = true
+auto-pairs = true
+mouse = true
+cursorline = true
+idle-timeout = 250
+completion-timeout = 5
+completion-trigger-len = 1
+true-color = true
+color-modes = true
+end-of-line-diagnostics = "hint"
+clipboard-provider = "wayland"
+default-yank-register = "+"
+line-number = "relative"
+
+[editor.soft-wrap]
+enable = true
+
+[editor.cursor-shape]
+insert = "bar"
+
+[editor.file-picker]
+hidden = false
+
+[editor.gutters.line-numbers]
+min-width = 2
+
+[editor.indent-guides]
+render = true
+character = "¦"
+skip-levels = 1
+
+[editor.search]
+wrap-around = false
+
+[editor.statusline]
+left = ["mode", "read-only-indicator"]
+center = []
+right = ["diagnostics"]
+mode.normal = "Normal"
+mode.insert = "Insert"
+mode.select = "Select"
+
+[editor.whitespace.render]
+tab = "all"
+nbsp = "all"
+
+[editor.whitespace.characters]
+nbsp = "⍽"
+
+[keys.normal]
+# Vim-style navigation
+h = "move_char_left"
+j = "move_line_down"
+k = "move_line_up"
+l = "move_char_right"
+H = "hover"
+
+# Line boundaries
+q = "extend_to_line_start"
+e = "extend_to_line_end"
+Q = "insert_at_line_start"
+E = "insert_at_line_end"
+
+# Bash-style keys
+C-a = "goto_line_start"
+C-e = "goto_line_end"
+
+# Multicursors
+C-s = "select_regex"
+C-d = ["search_selection", "extend_search_next"]
+L = "split_selection_on_newline"
+
+# Search
+"?" = "global_search"
+
+# Editing
+x = "delete_selection"
+v = "extend_line_below"
+V = "select_mode"
+
+# Jump history
+J = "jump_forward"
+
+# Command palette
+C-p = "command_palette"
+
+
+[keys.insert]
+C-a = "goto_line_start"
+C-e = "goto_line_end_newline"
+C-t = "insert_tab"
+C-p = "command_palette"
+
+[keys.select]
+h = "extend_char_left"
+j = "extend_line_down"
+k = "extend_line_up"
+l = "extend_char_right"
+
+q = "extend_to_line_start"
+e = "extend_to_line_end"
+Q = "extend_to_line_start"
+E = "extend_to_line_end"
+
+C-a = "goto_line_start"
+C-e = "goto_line_end"
+
+C-s = "select_regex"
+C-d = ["search_selection", "extend_search_next"]
+L = "split_selection_on_newline"
+
+"?" = "global_search"
+x = "delete_selection"

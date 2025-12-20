@@ -1,0 +1,51 @@
+# --- Clock ---
+clock
+timestr=%I:%M %p
+datestr=%d-%m-%Y
+
+# --- Behavior ---
+daemonize
+screenshots
+ignore-empty-password
+
+# --- Indicator ---
+indicator
+indicator-radius=111
+indicator-thickness=9
+
+# --- Effects ---
+effect-blur=7x5
+effect-vignette=0.75:0.75
+effect-pixelate=5
+
+# --- Font ---
+font=Maple Mono
+
+# --- Colors ---
+text-color=FBF1C7FF
+text-wrong-color=FBF1C7FF
+text-ver-color=FBF1C7FF
+text-clear-color=FBF1C7FF
+
+key-hl-color=fabd2fFF
+bs-hl-color=fb4934FF
+
+ring-color=689d6aff
+ring-clear-color=d65d0eFF
+ring-wrong-color=cc241dff
+ring-ver-color=b8bb26FF
+
+line-color=FFFFFF00
+line-clear-color=FFFFFF00
+line-ver-color=FFFFFF00
+line-wrong-color=FFFFFF00
+
+separator-color=FFFFFF00
+
+inside-color=3C3836DD
+inside-ver-color=3C3836DD
+inside-clear-color=3C3836DD
+inside-wrong-color=3C3836DD
+
+layout-bg-color=FFFFFF00
+layout-text-color=FBF1C7FF

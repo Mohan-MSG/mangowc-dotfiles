@@ -1,0 +1,75 @@
+[global]
+
+
+    script = ~/.config/dunst/notify.sh
+
+    ### Positioning
+    monitor = 0
+    follow = none
+    origin = top-right
+    offset = 20x20
+
+    ### Geometry
+    width = 360
+    height = 120
+    notification_limit = 5
+    corner_radius = 14
+    frame_width = 2
+    frame_color = "#444b6a"
+
+    ### Padding
+    padding = 12
+    horizontal_padding = 12
+    separator_height = 2
+    separator_color = frame
+
+    ### Font & text
+    font = JetBrainsMono Nerd Font 10
+    line_height = 0
+    alignment = left
+    word_wrap = yes
+    ellipsize = middle
+    ignore_newline = no
+
+    ### IMPORTANT: disable markup completely
+    markup = no
+
+    ### Icons
+    icon_position = left
+    max_icon_size = 48
+    enable_recursive_icon_lookup = true
+
+    ### Transparency
+    transparency = 10
+
+    ### Animations
+    show_indicators = yes
+    shrink = no
+    idle_threshold = 120
+    geometry = "360x5-20+20"
+    show_age_threshold = 60
+
+    ### History
+    stack_duplicates = true
+    hide_duplicate_count = false
+
+    ### Mouse
+    mouse_left_click = close_current
+    mouse_middle_click = do_action
+    mouse_right_click = close_all
+
+[urgency_low]
+    background = "#1a1b26"
+    foreground = "#a9b1d6"
+    timeout = 3000
+
+[urgency_normal]
+    background = "#1a1b26"
+    foreground = "#7aa2f7"
+    timeout = 5000
+
+[urgency_critical]
+    background = "#1a1b26"
+    foreground = "#f7768e"
+    frame_color = "#f7768e"
+    timeout = 0

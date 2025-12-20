@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "name": "Lock",
+      "command": "hyprctl dispatch lock",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/lock.png"
+    },
+    {
+      "name": "Logout",
+      "command": "hyprctl dispatch exit",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/logout.png"
+    },
+    {
+      "name": "Shutdown",
+      "command": "systemctl poweroff",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/power.png"
+    },
+    {
+      "name": "Reboot",
+      "command": "systemctl reboot",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/restart.png"
+    },
+    {
+      "name": "Suspend",
+      "command": "systemctl suspend",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/sleep.png"
+    },
+    {
+      "name": "Hibernate",
+      "command": "systemctl hibernate",
+      "icon": "/home/mohan/dotfiles/quickshell/icons/hibernate.png"
+    }
+  ]
+}
