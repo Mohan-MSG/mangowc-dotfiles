@@ -31,16 +31,16 @@
   },
   
   "cpu": {
-    "format": "CPU: {usage}%",
+    "format": " : {usage}%",
     "tooltip": false
   },
   "memory": {
-    "format": "Mem: {used}GiB"
+    "format": " : {used}GiB"
   },
   "disk": {
     "interval": 60,
     "path": "/",
-    "format": "Disk: {free}"
+    "format": " : {free}"
   },
   "battery": {
     "states": {
@@ -48,7 +48,7 @@
       "warning": 30,
       "critical": 15
     },
-    "format": "Bat: {capacity}% {icon} {time}",
+    "format": "{icon} : {capacity}% {time}",
     "format-plugged": "{capacity}% ",
     "format-alt": "Bat {capacity}%",
     "format-time": "{H}:{M}",
@@ -65,10 +65,10 @@
     "sort-by-id": true
   },
   "dwl/tags": {
-    "num-tags": 9
+    "num-tags": 5
   },
   "dwl/window#layout": {
-    "format": "[{layout}]"
+    "format": "layout: {layout}"
   },
   "dwl/window#title": {
     "format": "{title}"
