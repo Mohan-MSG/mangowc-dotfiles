@@ -4,197 +4,196 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 
 ShellRoot {
     id: root
 
-    /* =====================
-       COLORS / THEME
-       ===================== */
-    property bool darkMode: true
-    property color bg: darkMode ? "#1a1b26" : "#eaeaea"
-    property color fg: darkMode ? "#c0caf5" : "#2e3440"
-    property color muted: darkMode ? "#444b6a" : "#9aa5ce"
-    property color green: "#9ece6a"
-    property color yellow: "#e0af68"
-    property color red: "#f7768e"
-    property color cyan: "#0db9d7"
-    property color blue: "#7aa2f7"
+    // Theme colors
+    property color colBg: "#1a1b26"
+    property color colFg: "#a9b1d6"
+    property color colMuted: "#444b6a"
+    property color colCyan: "#0db9d7"
+    property color colPurple: "#ad8ee6"
+    property color colRed: "#f7768e"
+    property color colYellow: "#e0af68"
+    property color colBlue: "#7aa2f7"
 
-    property var workspaceAccents: [
-        "#7aa2f7", "#0db9d7", "#ad8ee6",
-        "#e0af68", "#f7768e", "#9ece6a",
-        "#bb9af7", "#2ac3de", "#ff9e64"
-    ]
-
-    property color accent:
-        workspaceAccents[(Hyprland.focusedWorkspace?.id ?? 1) - 1]
-
+    // Font
     property string fontFamily: "JetBrainsMono Nerd Font"
-    property int fontSize: 13
+    property int fontSize: 14
 
-    /* =====================
-       HELPERS
-       ===================== */
-    function lerp(a, b, t) { return a + (b - a) * t }
+    // System info properties
+    property string kernelVersion: "Linux"
+    property int cpuUsage: 0
+    property int memUsage: 0
+    property int diskUsage: 0
+    property int volumeLevel: 0
+    property string activeWindow: "Window"
+    property string currentLayout: "Tile"
 
-    function gradient(v) {
-        if (v < 50)
-            return Qt.rgba(
-                lerp(green.r, yellow.r, v / 50),
-                lerp(green.g, yellow.g, v / 50),
-                lerp(green.b, yellow.b, v / 50), 1)
-        return Qt.rgba(
-            lerp(yellow.r, red.r, (v - 50) / 50),
-            lerp(yellow.g, red.g, (v - 50) / 50),
-            lerp(yellow.b, red.b, (v - 50) / 50), 1)
-    }
+    // CPU tracking
+    property var lastCpuIdle: 0
+    property var lastCpuTotal: 0
 
-    
-    function bvgradient(value) {
-        if (value > 75) return "red" ;
-        if (value > 50) return "yellow";
-        return "green";
-    }
-
-    /* =====================
-       STATE
-       ===================== */
-    property int cpu: 0
-    property int mem: 0
-    property int vol: 0
-    property int bat: 0
-    property int bri: 0
-    property string batState: "unknown"
-    property string batTime: ""
-    property string kernel: ""
-
-    property int lastCpuIdle: 0
-    property int lastCpuTotal: 0
-    property bool lowBatWarned: false
-
-    property var cpuHist: []
-    property var memHist: []
-    property var volHist: []
-
-    /* =====================
-       PROCESSES
-       ===================== */
+    // Kernel version
     Process {
+        id: kernelProc
         command: ["uname", "-r"]
-        stdout: SplitParser { onRead: d => kernel = d.trim() }
+        stdout: SplitParser {
+            onRead: data => {
+                if (data) kernelVersion = data.trim()
+            }
+        }
         Component.onCompleted: running = true
     }
 
+    // CPU usage
     Process {
         id: cpuProc
         command: ["sh", "-c", "head -1 /proc/stat"]
         stdout: SplitParser {
-            onRead: d => {
-                var p = d.trim().split(/\s+/)
-                var idle = +p[4] + +p[5]
-                var total = p.slice(1).reduce((a,b)=>a+ +b,0)
-                if (lastCpuTotal) {
-                    cpu = Math.round(
-                        100 * ((total-lastCpuTotal)-(idle-lastCpuIdle)) /
-                        (total-lastCpuTotal))
+            onRead: data => {
+                if (!data) return
+                var parts = data.trim().split(/\s+/)
+                var user = parseInt(parts[1]) || 0
+                var nice = parseInt(parts[2]) || 0
+                var system = parseInt(parts[3]) || 0
+                var idle = parseInt(parts[4]) || 0
+                var iowait = parseInt(parts[5]) || 0
+                var irq = parseInt(parts[6]) || 0
+                var softirq = parseInt(parts[7]) || 0
+
+                var total = user + nice + system + idle + iowait + irq + softirq
+                var idleTime = idle + iowait
+
+                if (lastCpuTotal > 0) {
+                    var totalDiff = total - lastCpuTotal
+                    var idleDiff = idleTime - lastCpuIdle
+                    if (totalDiff > 0) {
+                        cpuUsage = Math.round(100 * (totalDiff - idleDiff) / totalDiff)
+                    }
                 }
-                lastCpuIdle = idle
                 lastCpuTotal = total
+                lastCpuIdle = idleTime
             }
         }
+        Component.onCompleted: running = true
     }
 
+    // Memory usage
     Process {
         id: memProc
         command: ["sh", "-c", "free | grep Mem"]
         stdout: SplitParser {
-            onRead: d => {
-                var p = d.split(/\s+/)
-                mem = Math.round(100 * p[2] / p[1])
+            onRead: data => {
+                if (!data) return
+                var parts = data.trim().split(/\s+/)
+                var total = parseInt(parts[1]) || 1
+                var used = parseInt(parts[2]) || 0
+                memUsage = Math.round(100 * used / total)
             }
         }
+        Component.onCompleted: running = true
     }
 
+    // Disk usage
+    Process {
+        id: diskProc
+        command: ["sh", "-c", "df / | tail -1"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (!data) return
+                var parts = data.trim().split(/\s+/)
+                var percentStr = parts[4] || "0%"
+                diskUsage = parseInt(percentStr.replace('%', '')) || 0
+            }
+        }
+        Component.onCompleted: running = true
+    }
+
+    // Volume level (wpctl for PipeWire)
     Process {
         id: volProc
         command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
         stdout: SplitParser {
-            onRead: d => vol = Math.round(+d.match(/([\d.]+)/)[1] * 100)
-        }
-    }
-
-    
-    Process {
-        id: briProc
-        command: ["sh", "-c", "value=$(brightnessctl get); max=$(brightnessctl max); echo $value $max" ]
-        stdout: SplitParser {
-            onRead: d => {
-                var parts = d.trim().split(" ")
-                var value = parseInt(parts[0])
-                var max = parseInt(parts[1])
-                if ( !isNaN(value) && !isNaN(max) && max > 0 ) {
-                    bri = Math.round( value / max * 100 )
+            onRead: data => {
+                if (!data) return
+                var match = data.match(/Volume:\s*([\d.]+)/)
+                if (match) {
+                    volumeLevel = Math.round(parseFloat(match[1]) * 100)
                 }
             }
         }
+        Component.onCompleted: running = true
     }
 
+    // Active window title
     Process {
-        id: batProc
-        command: ["sh", "-c",
-            "upower -i $(upower -e | grep BAT) | awk "
-            + "'/percentage/ {p=$2} /state/ {s=$2} "
-            + "/time to/ {t=$4\" \"$5} END {print p,s,t}'"]
+        id: windowProc
+        command: ["sh", "-c", "hyprctl activewindow -j | jq -r '.title // empty'"]
         stdout: SplitParser {
-            onRead: d => {
-                var p = d.trim().split(" ")
-                bat = parseInt(p[0])
-                batState = p[1]
-                batTime = p.slice(2).join(" ")
-
-                if (bat <= 20 && batState === "discharging" && !lowBatWarned) {
-                    Hyprland.dispatch(
-                        "exec notify-send -u critical 'Low Battery' 'Battery at " + bat + "%'"
-                    )
-                    lowBatWarned = true
+            onRead: data => {
+                if (data && data.trim()) {
+                    activeWindow = data.trim()
                 }
-                if (bat > 25) lowBatWarned = false
             }
         }
+        Component.onCompleted: running = true
     }
 
-    /* =====================
-       TIMER
-       ===================== */
+    // Current layout (Hyprland: dwindle/master/floating)
+    Process {
+        id: layoutProc
+        command: ["sh", "-c", "hyprctl activewindow -j | jq -r 'if .floating then \"Floating\" elif .fullscreen == 1 then \"Fullscreen\" else \"Tiled\" end'"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data && data.trim()) {
+                    currentLayout = data.trim()
+                }
+            }
+        }
+        Component.onCompleted: running = true
+    }
+
+    // Slow timer for system stats
     Timer {
-        interval: 1000
+        interval: 2000
         running: true
         repeat: true
         onTriggered: {
             cpuProc.running = true
             memProc.running = true
+            diskProc.running = true
             volProc.running = true
-            batProc.running = true
-            briProc.running = true
-
-            cpuHist.push(cpu); if (cpuHist.length > 20) cpuHist.shift()
-            memHist.push(mem); if (memHist.length > 20) memHist.shift()
-            volHist.push(vol); if (volHist.length > 20) volHist.shift()
         }
     }
 
-    /* =====================
-       UI
-       ===================== */
+    // Event-based updates for window/layout (instant)
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            windowProc.running = true
+            layoutProc.running = true
+        }
+    }
+
+    // Backup timer for window/layout (catches edge cases)
+    Timer {
+        interval: 200
+        running: true
+        repeat: true
+        onTriggered: {
+            windowProc.running = true
+            layoutProc.running = true
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
         PanelWindow {
+            property var modelData
             screen: modelData
-            implicitHeight: 36
-            color: "transparent"
 
             anchors {
                 top: true
@@ -202,158 +201,212 @@ ShellRoot {
                 right: true
             }
 
+            implicitHeight: 30
+            color: root.colBg
+
             margins {
-                top : 10
+                top: 0
+                bottom: 0
                 left: 0
                 right: 0
             }
 
             Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width - 40
-                height: parent.height
-                radius: 12
-                color: bg
-                border.color: muted
+                anchors.fill: parent
+                color: root.colBg
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: 8
-                    Layout.margins: 5
+                    spacing: 0
 
-                    /* WORKSPACES */
+                    Item { width: 15 }
+
                     Repeater {
-                        model: 9
-                        delegate: Text {
-                            text: index + 1
-                            color: Hyprland.focusedWorkspace?.id === index+1
-                                   ? accent : muted
-                            font.bold: true
-                            font.family: fontFamily
-                            font.pixelSize: fontSize
+                        model: 5
+
+                        Rectangle {
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: parent.height
+                            color: "transparent"
+
+                            property var workspace: Hyprland.workspaces.values.find(ws => ws.id === index + 1) ?? null
+                            property bool isActive: Hyprland.focusedWorkspace?.id === (index + 1)
+                            property bool hasWindows: workspace !== null
+
+                            Text {
+                                text: index + 1
+                                color: parent.isActive ? root.colCyan : (parent.hasWindows ? root.colCyan : root.colMuted)
+                                font.pixelSize: root.fontSize
+                                font.family: root.fontFamily
+                                font.bold: true
+                                anchors.centerIn: parent
+                            }
+
+                            Rectangle {
+                                width: 20
+                                height: 3
+                                color: parent.isActive ? root.colPurple : root.colBg
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                            }
+
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: Hyprland.dispatch("workspace " + (index+1))
+                                onClicked: Hyprland.dispatch("workspace " + (index + 1))
                             }
                         }
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
 
-                    /* CLOCK */
                     Text {
-                        text: Qt.formatDateTime(new Date(),
-                            "ddd dd MMM yyyy HH:mm:ss")
-                        color: accent
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
+                        text: currentLayout
+                        color: root.colFg
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.leftMargin: 5
+                        Layout.rightMargin: 5
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 2
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: activeWindow
+                        color: root.colPurple
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 8
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+
+                    Text {
+                        text: kernelVersion
+                        color: root.colRed
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "CPU: " + cpuUsage + "%"
+                        color: root.colYellow
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "Mem: " + memUsage + "%"
+                        color: root.colCyan
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "Disk: " + diskUsage + "%"
+                        color: root.colBlue
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "Vol: " + volumeLevel + "%"
+                        color: root.colPurple
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        id: clockText
+                        text: Qt.formatDateTime(new Date(), "ddd, dd MMM yyyy - HH:mm:ss")
+                        color: root.colCyan
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+
                         Timer {
                             interval: 1000
                             running: true
                             repeat: true
-                            onTriggered: parent.text =
-                                Qt.formatDateTime(new Date(),
-                                    "ddd dd MMM yyyy HH:mm:ss")
+                            onTriggered: clockText.text = Qt.formatDateTime(new Date(), "ddd, dd MMM yyyy - HH:mm:ss")
                         }
                     }
 
-                    Item { Layout.fillWidth: true }
-
-                    /* DARK MODE TOGGLE BUTTON */
-                    Rectangle {
-                        width: 30; height: 20
-                        radius: 4
-                        color: muted
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root.darkMode = !root.darkMode
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            text: darkMode ? "" : "☀️"
-                            font.pixelSize: fontSize
-                        }
-                    }
-
-                    /* KERNEL */
-                    Text {
-                        text: " " + kernel
-                        color: blue
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
-
-                    /* CPU STAT */
-                    Rectangle {
-                        width: 3; height: parent.height
-                        color: cyan
-                    }
-                    Text {
-                        text: "CPU " + cpu + "%"
-                        color: gradient(cpu)
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
-
-                    /* MEM STAT */
-                    Rectangle {
-                        width: 3; height: parent.height
-                        color: cyan
-                    }
-                    Text {
-                        text: "MEM " + mem + "%"
-                        color: gradient(mem)
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
-
-                    /* VOL STAT */
-                    Rectangle {
-                        width: 3; height: parent.height
-                        color: cyan
-                    }
-                    Text {
-                        text: "VOL " + vol + "%"
-                        color: bvgradient(vol)
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
-
-                    
-                    /* BRI STAT */
-                    Rectangle {
-                        width: 3; height: parent.height
-                        color: cyan
-                    }
-                    Text {
-                        text: "BRI " + bri + "%"
-                        color: bvgradient(bri)
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
-
-                    /* BATTERY */
-                    Rectangle {
-                        width: 3; height: parent.height
-                        color: cyan
-                    }
-                    Text {
-                        text:
-                            (batState === "charging" ? "󰂄" :
-                             bat === 100 ? "󰁹 Full" :
-                             bat >= 95 ? "󰁹" :
-                             bat >= 75 ? "󰁾" :
-                             bat >= 50 ? "󰁼" :
-                             bat >= 25 ? "󰁻" : "󰁺")
-                            + " " + bat + "% " + batTime
-                        color: gradient(100 - bat)
-                        font.family: fontFamily
-                        font.pixelSize: fontSize
-                    }
+                    Item { width: 8 }
                 }
             }
         }
     }
 }
-

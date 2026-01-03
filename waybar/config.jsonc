@@ -5,13 +5,13 @@
     "dwl/window#layout",
     "custom/sep",
     "dwl/window#title",
-    "custom/sep",
-    "network",
   ],
   "modules-center": [
     "clock"
   ],
   "modules-right": [
+    "custom/sep",
+    "network",
     "custom/sep",
     "battery",
     "custom/sep",

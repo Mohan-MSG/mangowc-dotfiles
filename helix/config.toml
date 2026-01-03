@@ -14,6 +14,7 @@ end-of-line-diagnostics = "hint"
 clipboard-provider = "wayland"
 default-yank-register = "+"
 line-number = "relative"
+auto-completion = true
 
 [editor.soft-wrap]
 enable = true

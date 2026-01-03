@@ -49,3 +49,7 @@ inside-wrong-color=3C3836DD
 
 layout-bg-color=FFFFFF00
 layout-text-color=FBF1C7FF
+
+# --- Background ---
+image=/home/mohan/dotfiles/wallpapers/Goku.jpg
+scaling=fill
