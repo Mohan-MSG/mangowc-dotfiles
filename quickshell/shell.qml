@@ -235,7 +235,7 @@ ShellRoot {
 
                             Text {
                                 text: index + 1
-                                color: parent.isActive ? root.colCyan : (parent.hasWindows ? root.colCyan : root.colMuted)
+                                color: parent.isActive ? root.colCyan : (parent.hasWindows ? root.colFg : root.colMuted)
                                 font.pixelSize: root.fontSize
                                 font.family: root.fontFamily
                                 font.bold: true
