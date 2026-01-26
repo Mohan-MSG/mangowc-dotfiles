@@ -1,7 +1,7 @@
 # --- Clock ---
 clock
 timestr=%I:%M %p
-datestr=%d-%m-%Y
+datestr=%A, %d %B %Y
 
 # --- Behavior ---
 daemonize
@@ -10,45 +10,45 @@ ignore-empty-password
 
 # --- Indicator ---
 indicator
-indicator-radius=111
-indicator-thickness=9
+indicator-radius=140
+indicator-thickness=15
 
 # --- Effects ---
-effect-blur=7x5
-effect-vignette=0.75:0.75
+effect-blur=10x2
+effect-vignette=0.5:0.5
 effect-pixelate=5
 
 # --- Font ---
-font=Maple Mono
+font=JetBrainsMono Nerd Font
 
-# --- Colors ---
-text-color=FBF1C7FF
-text-wrong-color=FBF1C7FF
-text-ver-color=FBF1C7FF
-text-clear-color=FBF1C7FF
+# --- Colors (Catppuccin Mocha) ---
+text-color=cdd6f4ff
+text-wrong-color=f38ba8ff
+text-ver-color=cba6f7ff
+text-clear-color=a6e3a1ff
 
-key-hl-color=fabd2fFF
-bs-hl-color=fb4934FF
+key-hl-color=89b4faff
+bs-hl-color=f38ba8ff
 
-ring-color=689d6aff
-ring-clear-color=d65d0eFF
-ring-wrong-color=cc241dff
-ring-ver-color=b8bb26FF
+ring-color=313244ff
+ring-clear-color=a6e3a1ff
+ring-wrong-color=f38ba8ff
+ring-ver-color=cba6f7ff
 
-line-color=FFFFFF00
-line-clear-color=FFFFFF00
-line-ver-color=FFFFFF00
-line-wrong-color=FFFFFF00
+line-color=00000000
+line-clear-color=00000000
+line-ver-color=00000000
+line-wrong-color=00000000
 
-separator-color=FFFFFF00
+separator-color=00000000
 
-inside-color=3C3836DD
-inside-ver-color=3C3836DD
-inside-clear-color=3C3836DD
-inside-wrong-color=3C3836DD
+inside-color=1e1e2e00
+inside-ver-color=1e1e2e00
+inside-clear-color=1e1e2e00
+inside-wrong-color=1e1e2e00
 
-layout-bg-color=FFFFFF00
-layout-text-color=FBF1C7FF
+layout-bg-color=00000000
+layout-text-color=cdd6f4ff
 
 # --- Background ---
 image=/home/mohan/dotfiles/wallpapers/Goku.jpg

@@ -39,15 +39,7 @@ ShellRoot {
     property string activeWindow: "Window"
     property string currentLayout: "Tile"
     property int brightnessLevel: 0
-    property string wifiSsid: "Disconnected"
-    property string bluetoothDevice: "Off"
-    property bool wifiMenuOpen: false
-    property bool btMenuOpen: false
-
-    ListModel { id: wifiModel }
-    ListModel { id: btModel }
-
-    property int workspacesPerPage: 10
+    property int workspacesPerPage: 5
     property int workspacePageStart: {
         if (!Hyprland.focusedWorkspace)
             return 1
@@ -68,12 +60,7 @@ ShellRoot {
         Hyprland.dispatch("workspace " + target);
     }
 
-    function runOnce(cmd, processName) {
-        Quickshell.exec([
-            "sh", "-c",
-            "pgrep -x " + processName + " >/dev/null || " + cmd
-        ])
-    }
+    
 
     // Kernel version
     Process {
@@ -246,79 +233,6 @@ ShellRoot {
         Component.onCompleted: running = true
     }
 
-    // WiFi info
-    Process {
-        id: wifiProc
-        command: ["sh", "-c", "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2- | head -n 1"]
-        stdout: SplitParser {
-            onRead: data => {
-                let trimmed = data ? data.trim() : ""
-                wifiSsid = trimmed !== "" ? trimmed : "Disconnected"
-            }
-        }
-        Component.onCompleted: running = true
-    }
-
-    // Bluetooth info
-    Process {
-        id: btProc
-        command: ["sh", "-c", "if bluetoothctl show | grep -q 'Powered: yes'; then dev=$(bluetoothctl devices Connected|head -n 1|cut -d' ' -f3-); [ -n \"$dev\" ] && echo \"$dev\" || echo \"On\"; else echo \"Off\"; fi"]
-        stdout: SplitParser {
-            onRead: data => {
-                if (data) bluetoothDevice = data.trim()
-            }
-        }
-        Component.onCompleted: running = true
-    }
-
-    // WiFi Listing
-    Process {
-        id: wifiListProc
-        command: ["nmcli", "-t", "-f", "active,ssid,signal,security", "dev", "wifi", "list"]
-        stdout: SplitParser {
-            onRead: data => {
-                if (!data) return
-                wifiModel.clear()
-                let lines = data.trim().split('\n')
-                lines.forEach(line => {
-                    if (!line.trim()) return
-                    let parts = line.split(':')
-                    if (parts.length >= 4) {
-                        wifiModel.append({
-                            active: parts[0] === 'yes',
-                            ssid: parts[1] || "Unknown",
-                            signal: parseInt(parts[2]) || 0,
-                            security: parts[3] !== ""
-                        })
-                    }
-                })
-            }
-        }
-    }
-
-    // Bluetooth Listing
-    Process {
-        id: btListProc
-        command: ["sh", "-c", "bluetoothctl devices"]
-        stdout: SplitParser {
-            onRead: data => {
-                if (!data) return
-                btModel.clear()
-                let lines = data.trim().split('\n')
-                lines.forEach(line => {
-                    if (!line.trim()) return
-                    let match = line.match(/^Device\s+([0-9A-F:]+)\s+(.+)$/)
-                    if (match) {
-                        btModel.append({
-                            mac: match[1],
-                            name: match[2]
-                        })
-                    }
-                })
-            }
-        }
-    }
-
     
     // Slow timer for system stats
     Timer {
@@ -332,8 +246,6 @@ ShellRoot {
             volProc.running = true
             batProc.running = true
             brightProc.running = true
-            wifiProc.running = true
-            btProc.running = true
         }
     }
 
@@ -363,7 +275,6 @@ ShellRoot {
         PanelWindow {
             property var modelData
             screen: modelData
-            focusable: false
 
             anchors {
                 top: true
@@ -371,7 +282,7 @@ ShellRoot {
                 right: true
             }
 
-            height: 36
+            implicitHeight: 36
             color: "transparent"
 
             margins {
@@ -391,7 +302,7 @@ ShellRoot {
                 RowLayout {
                     anchors {
                         left: parent.left
-                        right: topClockLayout.left
+                        right: clockLayout.left
                         top: parent.top
                         bottom: parent.bottom
                     }
@@ -399,7 +310,6 @@ ShellRoot {
 
                     Item { width: 15 }
 
-                    // Workspaces
                     Item {
                         Layout.preferredWidth: 100
                         Layout.preferredHeight: parent.height
@@ -407,7 +317,7 @@ ShellRoot {
                         Row {
                             anchors.fill: parent
                             Repeater {
-                                model: 10
+                                model: 5
 
                                 Rectangle {
                                     width: 20
@@ -460,23 +370,6 @@ ShellRoot {
                         }
                     }
 
-                    Item { Layout.fillWidth: true }
-                }
-
-                RowLayout {
-                    id: topClockLayout
-                    anchors.centerIn: parent
-                    spacing: 0
-
-                    Text {
-                        id: topClockDay
-                        text: Qt.formatDateTime(new Date(), "ddd")
-                        color: root.colRed
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                    }
-
                     Rectangle {
                         Layout.preferredWidth: 1
                         Layout.preferredHeight: 16
@@ -485,159 +378,6 @@ ShellRoot {
                         Layout.rightMargin: 8
                         color: root.colMuted
                     }
-
-                    Text {
-                        id: topClockDate
-                        text: Qt.formatDateTime(new Date(), "dd MMM yyyy")
-                        color: root.colLavender
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 16
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 8
-                        Layout.rightMargin: 8
-                        color: root.colMuted
-                    }
-
-                    Text {
-                        id: topClockTime
-                        text: Qt.formatDateTime(new Date(), "HH:mm:ss")
-                        color: root.colCyan
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                    }
-
-                    Timer {
-                        interval: 1000
-                        running: true
-                        repeat: true
-                        onTriggered: {
-                            var now = new Date()
-                            topClockDay.text = Qt.formatDateTime(now, "ddd")
-                            topClockDate.text = Qt.formatDateTime(now, "dd MMM yyyy")
-                            topClockTime.text = Qt.formatDateTime(now, "HH:mm:ss")
-                        }
-                    }
-                }
-
-                RowLayout {
-                    anchors {
-                        right: parent.right
-                        left: topClockLayout.right
-                        top: parent.top
-                        bottom: parent.bottom
-                    }
-                    spacing: 0
-
-                    Item { Layout.fillWidth: true }
-
-                    // System Stats (Left to Right: Kernel, CPU, Mem, Disk)
-                    Text {
-                        text: kernelVersion
-                        color: root.colRed
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                        Layout.rightMargin: 8
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 16
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: 12
-                        color: root.colMuted
-                    }
-
-                    Text {
-                        text: "CPU: " + cpuUsage + "%"
-                        color: root.colYellow
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                        Layout.rightMargin: 12
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 16
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: 12
-                        color: root.colMuted
-                    }
-
-                    Text {
-                        text: "Mem: " + memUsage + "%"
-                        color: root.colCyan
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                        Layout.rightMargin: 12
-                    }
-
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: 16
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: 12
-                        color: root.colMuted
-                    }
-
-                    Text {
-                        text: "Disk: " + diskUsage + "%"
-                        color: root.colBlue
-                        font.pixelSize: root.fontSize
-                        font.family: root.fontFamily
-                        font.bold: true
-                        Layout.rightMargin: 15
-                    }
-                }
-            }
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        PanelWindow {
-            property var modelData
-            screen: modelData
-            focusable: false
-
-            anchors {
-                bottom: true
-                left: true
-                right: true
-            }
-
-            height: 36
-            color: "transparent"
-
-            margins {
-                top: 0
-                bottom: 5
-                left: 10
-                right: 10
-            }
-
-            Rectangle {
-                anchors.fill: parent
-                color: root.colBg
-                radius: 8
-                border.color: "#33ffffff"
-                border.width: 1
-
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 0
-
-                    Item { width: 15 }
 
                     Text {
                         text: currentLayout
@@ -669,129 +409,162 @@ ShellRoot {
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }
+                }
 
-                    // WiFi Section
-                    Item {
-                        id: wifiWrapper
-                        Layout.preferredWidth: wifiInnerRow.implicitWidth + 30
-                        Layout.preferredHeight: parent.height
-                        Layout.leftMargin: 5
-                        Layout.rightMargin: 5
-                        
-                        Row {
-                            id: wifiInnerRow
-                            anchors.centerIn: parent
-                            spacing: 8
-                            opacity: wifiMouse.containsMouse ? 0.7 : 1.0
-                            Text {
-                                text: wifiSsid !== "Disconnected" ? "󰤨" : "󰤭"
-                                color: wifiSsid !== "Disconnected" ? root.colGreen : root.colMuted
-                                font.pixelSize: root.fontSize + 2
-                                font.family: root.fontFamily
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            Text {
-                                text: wifiSsid
-                                color: wifiSsid !== "Disconnected" ? root.colFg : root.colMuted
-                                font.pixelSize: root.fontSize
-                                font.family: root.fontFamily
-                                font.bold: true
-                                width: Math.min(120, implicitWidth)
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
+                RowLayout {
+                    id: clockLayout
+                    anchors.centerIn: parent
+                    spacing: 0
 
-                        MouseArea {
-                            id: wifiMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.AllButtons
-                            propagateComposedEvents: true
-                            preventStealing: true
-                            onClicked: (mouse) => {
-                                if (mouse.button === Qt.LeftButton) {
-                                    Quickshell.exec(["sh", "-c", "networkmanager_dmenu"])
-                                } else if (mouse.button === Qt.RightButton) {
-                                    Quickshell.exec(["sh", "-c", "nmcli radio wifi $(nmcli radio wifi | grep -q enabled && echo off || echo on)"])
-                                    wifiProc.running = true
-                                }
-                            }
-                        }
+                    Text {
+                        id: clockDay
+                        text: Qt.formatDateTime(new Date(), "ddd")
+                        color: root.colRed
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
                     }
 
                     Rectangle {
                         Layout.preferredWidth: 1
                         Layout.preferredHeight: 16
                         Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 8
                         color: root.colMuted
                     }
 
-                    // Bluetooth Section
-                    Item {
-                        id: btWrapper
-                        Layout.preferredWidth: btInnerRow.implicitWidth + 30
-                        Layout.preferredHeight: parent.height
-                        Layout.leftMargin: 5
-                        Layout.rightMargin: 5
-
-                        Row {
-                            id: btInnerRow
-                            anchors.centerIn: parent
-                            spacing: 8
-                            opacity: btMouse.containsMouse ? 0.7 : 1.0
-                            Text {
-                                text: bluetoothDevice !== "Off" ? "󰂯" : "󰂲"
-                                color: bluetoothDevice !== "Off" ? root.colBlue : root.colMuted
-                                font.pixelSize: root.fontSize + 2
-                                font.family: root.fontFamily
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            Text {
-                                text: bluetoothDevice
-                                color: bluetoothDevice !== "Off" ? root.colFg : root.colMuted
-                                font.pixelSize: root.fontSize
-                                font.family: root.fontFamily
-                                font.bold: true
-                                width: Math.min(100, implicitWidth)
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-
-                        MouseArea {
-                            id: btMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.AllButtons
-                            propagateComposedEvents: true
-                            preventStealing: true
-                            onClicked: (mouse) => {
-                                if (mouse.button === Qt.LeftButton) {
-                                    Quickshell.exec(["sh", "-c", "rofi-bluetooth"])
-                                } else if (mouse.button === Qt.RightButton) {
-                                    Quickshell.exec(["sh", "-c", "bluetoothctl power $(bluetoothctl show | grep -q 'Powered: yes' && echo off || echo on)"])
-                                    btProc.running = true
-                                }
-                            }
-                        }
+                    Text {
+                        id: clockDate
+                        text: Qt.formatDateTime(new Date(), "dd MMM yyyy")
+                        color: root.colLavender
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
                     }
 
                     Rectangle {
                         Layout.preferredWidth: 1
                         Layout.preferredHeight: 16
                         Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 8
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        id: clockTime
+                        text: Qt.formatDateTime(new Date(), "HH:mm:ss")
+                        color: root.colCyan
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                    }
+
+                    Timer {
+                        interval: 1000
+                        running: true
+                        repeat: true
+                        onTriggered: {
+                            var now = new Date()
+                            clockDay.text = Qt.formatDateTime(now, "ddd")
+                            clockDate.text = Qt.formatDateTime(now, "dd MMM yyyy")
+                            clockTime.text = Qt.formatDateTime(now, "HH:mm:ss")
+                        }
+                    }
+                }
+
+                RowLayout {
+                    anchors {
+                        right: parent.right
+                        left: clockLayout.right
+                        top: parent.top
+                        bottom: parent.bottom
+                    }
+                    spacing: 0
+
+                    Item { Layout.fillWidth: true }
+
+                    Text {
+                        text: kernelVersion
+                        color: root.colRed
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "CPU: " + cpuUsage + "%"
+                        color: root.colYellow
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "Mem: " + memUsage + "%"
+                        color: root.colCyan
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
+                        color: root.colMuted
+                    }
+
+                    Text {
+                        text: "Disk: " + diskUsage + "%"
+                        color: root.colBlue
+                        font.pixelSize: root.fontSize
+                        font.family: root.fontFamily
+                        font.bold: true
+                        Layout.rightMargin: 8
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 0
+                        Layout.rightMargin: 8
                         color: root.colMuted
                     }
 
                     Item {
-                        width: bottomVolInfo.implicitWidth
+                        width: volInfo.implicitWidth
                         height: parent.height
-                        Layout.leftMargin: 15
+                        Layout.leftMargin: 8
                         Layout.rightMargin: 8
 
                         Text {
-                            id: bottomVolInfo
+                            id: volInfo
                             text: "Vol: " + volumeLevel + "%"
                             color: root.colPurple
                             font.pixelSize: root.fontSize
@@ -805,7 +578,6 @@ ShellRoot {
                             hoverEnabled: true
                             acceptedButtons: Qt.NoButton
                             preventStealing: true
-                            propagateComposedEvents: true
 
                             onWheel: (wheel) => {
                                 if (wheel.angleDelta.y > 0)
@@ -829,13 +601,13 @@ ShellRoot {
                     }
 
                     Item {
-                        width: bottomBrightInfo.implicitWidth
+                        width: brightInfo.implicitWidth
                         height: parent.height
                         Layout.leftMargin: 8
                         Layout.rightMargin: 8
 
                         Text {
-                            id: bottomBrightInfo
+                            id: brightInfo
                             text: "Brt: " + brightnessLevel + "%"
                             color: root.colPeach
                             font.pixelSize: root.fontSize
@@ -849,7 +621,6 @@ ShellRoot {
                             hoverEnabled: true
                             acceptedButtons: Qt.NoButton
                             preventStealing: true
-                            propagateComposedEvents: true
 
                             onWheel: (wheel) => {
                                 if (wheel.angleDelta.y > 0)
@@ -873,15 +644,15 @@ ShellRoot {
                     }
 
                     Item {
-                        id: bottomBatteryWrapper
-                        implicitWidth: bottomBatInnerRow.implicitWidth
+                        id: batteryWrapper
+                        implicitWidth: batInnerRow.implicitWidth
                         implicitHeight: 24
                         Layout.alignment: Qt.AlignVCenter
                         Layout.rightMargin: 8
                         property bool showTime: false
 
                         Row {
-                            id: bottomBatInnerRow
+                            id: batInnerRow
                             spacing: 6
                             anchors.verticalCenter: parent.verticalCenter
 
@@ -898,7 +669,7 @@ ShellRoot {
                                     radius: 2
 
                                     Rectangle {
-                                        id: bottomBatteryFill
+                                        id: batteryFill
                                         anchors.left: parent.left
                                         anchors.top: parent.top
                                         anchors.bottom: parent.bottom
@@ -908,7 +679,7 @@ ShellRoot {
                                         radius: 1
 
                                         Rectangle {
-                                            id: bottomChargingGlow
+                                            id: chargingGlow
                                             anchors.fill: parent
                                             color: "white"
                                             opacity: 0
@@ -937,7 +708,7 @@ ShellRoot {
                             Text {
                                 property bool isPlugged: root.batteryStatus !== "Discharging"
                                 visible: isPlugged
-                                text: ""
+                                text: "󱐋"
                                 color: "#f1fa8c"
                                 font.pixelSize: root.fontSize + 4
                                 verticalAlignment: Text.AlignVCenter
@@ -945,7 +716,7 @@ ShellRoot {
                             }
 
                             Text {
-                                text: bottomBatteryWrapper.showTime ? root.batteryRemaining : root.batteryLevel + "%"
+                                text: batteryWrapper.showTime ? root.batteryRemaining : root.batteryLevel + "%"
                                 color: root.batteryColor
                                 font.pixelSize: root.fontSize
                                 font.family: root.fontFamily
@@ -957,15 +728,15 @@ ShellRoot {
                         MouseArea {
                             anchors.fill: parent
                             hoverEnabled: true
-                            onWheel: (wheel) => { bottomBatteryWrapper.showTime = !bottomBatteryWrapper.showTime }
+                            onWheel: (wheel) => { batteryWrapper.showTime = !batteryWrapper.showTime }
                             
                             Rectangle {
                                 visible: parent.containsMouse
                                 anchors.bottom: parent.top
                                 anchors.right: parent.right
                                 anchors.bottomMargin: 8
-                                width: bottomInfoText.width + 12
-                                height: bottomInfoText.height + 8
+                                width: infoText.width + 12
+                                height: infoText.height + 8
                                 color: root.colBg
                                 border.color: root.colMuted
                                 border.width: 1
@@ -973,7 +744,7 @@ ShellRoot {
                                 z: 100
 
                                 Text {
-                                    id: bottomInfoText
+                                    id: infoText
                                     anchors.centerIn: parent
                                     text: root.batteryRemaining
                                     color: root.colFg
@@ -985,249 +756,6 @@ ShellRoot {
                     }
 
                     Item { width: 8 }
-                }
-            }
-        }
-    }
-
-    // WiFi Popup Window
-    PanelWindow {
-        id: wifiPopupWindow
-        visible: root.wifiMenuOpen
-        screen: Quickshell.screens[0]
-        anchors { bottom: true; right: true }
-        margins { bottom: 45; right: 290 }
-        width: 250
-        height: 350
-        color: "transparent"
-        focusable: false
-
-        Rectangle {
-            anchors.fill: parent
-            color: root.colBg
-            radius: 10
-            border.color: root.colMuted
-            border.width: 1
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
-
-                Text {
-                    text: "Available Networks"
-                    color: root.colCyan
-                    font.family: root.fontFamily
-                    font.bold: true
-                    font.pixelSize: root.fontSize
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: root.colMuted
-                }
-
-                ListView {
-                    id: wifiListView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    model: wifiModel
-                    clip: true
-                    spacing: 5
-
-                    delegate: Rectangle {
-                        width: wifiListView.width
-                        height: 40
-                        color: wifiDelegateMouse.containsMouse ? "#33ffffff" : "transparent"
-                        radius: 5
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            spacing: 10
-
-                            Text {
-                                text: model.active ? "󰠠" : (model.security ? "󰖂" : "󰖩")
-                                color: model.active ? root.colGreen : root.colFg
-                                font.pixelSize: root.fontSize
-                                font.family: root.fontFamily
-                            }
-
-                            Text {
-                                text: model.ssid
-                                color: model.active ? root.colGreen : root.colFg
-                                font.pixelSize: root.fontSize - 1
-                                font.family: root.fontFamily
-                                font.bold: model.active
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                            }
-
-                            Text {
-                                text: model.signal + "%"
-                                color: root.colMuted
-                                font.pixelSize: root.fontSize - 2
-                                font.family: root.fontFamily
-                            }
-                        }
-
-                        MouseArea {
-                            id: wifiDelegateMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            preventStealing: true
-                            propagateComposedEvents: true
-                            onClicked: {
-                                Quickshell.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
-                                root.wifiMenuOpen = false
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 30
-                    color: wifiRefreshMouse.containsMouse ? "#22ffffff" : "transparent"
-                    radius: 5
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Refresh"
-                        color: root.colYellow
-                        font.pixelSize: root.fontSize - 2
-                        font.family: root.fontFamily
-                    }
-
-                    MouseArea {
-                        id: wifiRefreshMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        preventStealing: true
-                        propagateComposedEvents: true
-                        onClicked: wifiListProc.running = true
-                    }
-                }
-            }
-        }
-    }
-
-    // Bluetooth Popup Window
-    PanelWindow {
-        id: btPopupWindow
-        visible: root.btMenuOpen
-        screen: Quickshell.screens[0]
-        anchors { bottom: true; right: true }
-        margins { bottom: 45; right: 155 }
-        width: 250
-        height: 350
-        color: "transparent"
-        focusable: false
-
-        Rectangle {
-            anchors.fill: parent
-            color: root.colBg
-            radius: 10
-            border.color: root.colMuted
-            border.width: 1
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
-
-                Text {
-                    text: "Bluetooth Devices"
-                    color: root.colBlue
-                    font.family: root.fontFamily
-                    font.bold: true
-                    font.pixelSize: root.fontSize
-                    Layout.alignment: Qt.AlignHCenter
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: root.colMuted
-                }
-
-                ListView {
-                    id: btListView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    model: btModel
-                    clip: true
-                    spacing: 5
-
-                    delegate: Rectangle {
-                        width: btListView.width
-                        height: 40
-                        color: btDelegateMouse.containsMouse ? "#33ffffff" : "transparent"
-                        radius: 5
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            spacing: 10
-
-                            Text {
-                                text: "󰂯"
-                                color: root.colBlue
-                                font.pixelSize: root.fontSize
-                                font.family: root.fontFamily
-                            }
-
-                            Text {
-                                text: model.name
-                                color: root.colFg
-                                font.pixelSize: root.fontSize - 1
-                                font.family: root.fontFamily
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        MouseArea {
-                            id: btDelegateMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            preventStealing: true
-                            propagateComposedEvents: true
-                            onClicked: {
-                                Quickshell.exec(["bluetoothctl", "connect", model.mac])
-                                root.btMenuOpen = false
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 30
-                    color: btScanMouse.containsMouse ? "#22ffffff" : "transparent"
-                    radius: 5
-                    
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Scan"
-                        color: root.colYellow
-                        font.pixelSize: root.fontSize - 2
-                        font.family: root.fontFamily
-                    }
-
-                    MouseArea {
-                        id: btScanMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        preventStealing: true
-                        propagateComposedEvents: true
-                        onClicked: {
-                            Quickshell.exec(["sh", "-c", "bluetoothctl scan on & sleep 5; kill $!"])
-                            btListProc.running = true
-                        }
-                    }
                 }
             }
         }
